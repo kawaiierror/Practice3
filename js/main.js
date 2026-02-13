@@ -123,9 +123,12 @@ Vue.component('board', {
                         :card="card" 
                         :columnIndex="index" 
                         :cardIndex="cardIndex" 
-                        @edit-card="editCard" 
+
                         @move-card="moveCard" 
-                        @remove-card="removeCard">
+                        
+                        @edit-card="editCard" 
+
+                        @remove-card="removeCard">                       
                     </card>
                 </div>
             </div>
