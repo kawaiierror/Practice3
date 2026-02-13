@@ -74,61 +74,6 @@ Vue.component('board', {
         this.loadData();
     },
     methods: {
-        openCreateModal(columnIndex) {
-            this.isEditing = false;
-            this.editData = {
-                colIndex: columnIndex,
-                cardIndex: null,
-                title: '',
-                description: '',
-                deadline: new Date().toISOString().split('T')[0]
-            };
-            this.isModalOpen = true;
-        },
-        openEditModal(columnIndex, cardIndex) {
-            this.isEditing = true;
-            const card = this.columns[columnIndex].cards[cardIndex];
-            this.editData = {
-                colIndex: columnIndex,
-                cardIndex: cardIndex,
-                title: card.title,
-                description: card.description,
-                deadline: card.deadline
-            };
-            this.isModalOpen = true;
-        },
-        saveCard() {
-            const { colIndex, cardIndex, title, description, deadline } = this.editData;
-            if (!title || !description) return alert("Заполните все поля!");
-
-            const timestamp = new Date().toLocaleString();
-
-            if (this.isEditing) {
-                const card = this.columns[colIndex].cards[cardIndex];
-                card.title = title;
-                card.description = description;
-                card.deadline = deadline;
-                card.updatedAt = timestamp;
-                this.checkOverdue(card);
-            } else {
-                const newCard = {
-                    title,
-                    description,
-                    deadline,
-                    createdAt: timestamp,
-                    updatedAt: timestamp,
-                    completed: false,
-                    overdue: false
-                };
-                this.columns[colIndex].cards.push(newCard);
-                this.checkOverdue(newCard);
-            }
-
-            this.saveData();
-            this.isModalOpen = false;
-        },
-
-
         addCard(columnIndex) {
             const title = prompt("Введите заголовок задачи:");
             const description = prompt("Введите описание задачи:");
@@ -201,6 +146,60 @@ Vue.component('board', {
                     });
                 });
             }
+        },
+
+        openCreateModal(columnIndex) {
+            this.isEditing = false;
+            this.editData = {
+                colIndex: columnIndex,
+                cardIndex: null,
+                title: '',
+                description: '',
+                deadline: new Date().toISOString().split('T')[0]
+            };
+            this.isModalOpen = true;
+        },
+        openEditModal(columnIndex, cardIndex) {
+            this.isEditing = true;
+            const card = this.columns[columnIndex].cards[cardIndex];
+            this.editData = {
+                colIndex: columnIndex,
+                cardIndex: cardIndex,
+                title: card.title,
+                description: card.description,
+                deadline: card.deadline
+            };
+            this.isModalOpen = true;
+        },
+        saveCard() {
+            const { colIndex, cardIndex, title, description, deadline } = this.editData;
+            if (!title || !description) return alert("Заполните все поля!");
+
+            const timestamp = new Date().toLocaleString();
+
+            if (this.isEditing) {
+                const card = this.columns[colIndex].cards[cardIndex];
+                card.title = title;
+                card.description = description;
+                card.deadline = deadline;
+                card.updatedAt = timestamp;
+                this.checkOverdue(card);
+            } else {
+                const newCard = {
+                    title,
+                    description,
+                    deadline,
+                    createdAt: timestamp,
+                    updatedAt: timestamp,
+                    completed: false,
+                    overdue: false
+                };
+                this.columns[colIndex].cards.push(newCard);
+                this.checkOverdue(newCard);
+            }
+
+            this.saveData();
+            this.isModalOpen = false;
         }
     },
     template: `
