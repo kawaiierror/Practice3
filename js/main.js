@@ -1,3 +1,13 @@
+Vue.component('modal', {
+    template: `
+        <div class="modal-backdrop">
+            <div class="modal">
+                <slot></slot>
+            </div>
+        </div>
+    `
+});
+
 Vue.component('date-picker', {
     props: ['value'],
     template: `
@@ -32,17 +42,82 @@ Vue.component('board', {
                 { title: 'Задачи в работе', cards: [] },
                 { title: 'Тестирование', cards: [] },
                 { title: 'Выполненные задачи', cards: [] }
-            ]
+            ],
+
+            isModalOpen: false,
+            isEditing: false,
+            editData: {
+                colIndex: null,
+                cardIndex: null,
+                title: '',
+                description: '',
+                deadline: ''
+            }
         };
     },
-    created() {
+    mounted() {
         this.loadData();
     },
     methods: {
+        openCreateModal(columnIndex) {
+            this.isEditing = false;
+            this.editData = {
+                colIndex: columnIndex,
+                cardIndex: null,
+                title: '',
+                description: '',
+                deadline: new Date().toISOString().split('T')[0]
+            };
+            this.isModalOpen = true;
+        },
+        openEditModal(columnIndex, cardIndex) {
+            this.isEditing = true;
+            const card = this.columns[columnIndex].cards[cardIndex];
+            this.editData = {
+                colIndex: columnIndex,
+                cardIndex: cardIndex,
+                title: card.title,
+                description: card.description,
+                deadline: card.deadline
+            };
+            this.isModalOpen = true;
+        },
+        saveCard() {
+            const { colIndex, cardIndex, title, description, deadline } = this.editData;
+            if (!title || !description) return alert("Заполните все поля!");
+
+            const timestamp = new Date().toLocaleString();
+
+            if (this.isEditing) {
+                const card = this.columns[colIndex].cards[cardIndex];
+                card.title = title;
+                card.description = description;
+                card.deadline = deadline;
+                card.updatedAt = timestamp;
+                this.checkOverdue(card);
+            } else {
+                const newCard = {
+                    title,
+                    description,
+                    deadline,
+                    createdAt: timestamp,
+                    updatedAt: timestamp,
+                    completed: false,
+                    overdue: false
+                };
+                this.columns[colIndex].cards.push(newCard);
+                this.checkOverdue(newCard);
+            }
+
+            this.saveData();
+            this.isModalOpen = false;
+        },
+
+
         addCard(columnIndex) {
             const title = prompt("Введите заголовок задачи:");
             const description = prompt("Введите описание задачи:");
-            const deadline = new Date().toISOString().split('T')[0]; // Устанавливаем текущую дату по умолчанию
+            const deadline = new Date().toISOString().split('T')[0];
             const timestamp = new Date().toLocaleString();
 
             if (title && description) {
@@ -84,7 +159,7 @@ Vue.component('board', {
             if (targetColumnIndex === 1 && sourceColumnIndex === 2) {
                 const reason = prompt("Введите причину возврата:");
                 if (reason) {
-                    card.returnReason = reason; // Сохраняем причину возврата
+                    card.returnReason = reason;
                 }
             }
 
@@ -94,8 +169,8 @@ Vue.component('board', {
             this.saveData();
         },
         checkOverdue(card) {
-            const today = new Date();
-            const deadline = new Date(card.deadline);
+            const today = new Date().setHours(0,0,0,0);
+            const deadline = new Date(card.deadline).setHours(0,0,0,0);
             card.overdue = deadline < today;
         },
         saveData() {
@@ -117,21 +192,33 @@ Vue.component('board', {
         <div class="board">
             <div class="column" v-for="(column, index) in columns" :key="index">
                 <h2>{{ column.title }}</h2>
-                <button v-if="index === 0" @click="addCard(index)">Добавить задачу</button>
+
+                <button v-if="index === 0" @click="openCreateModal(index)">Добавить задачу</button>
+                
                 <div v-for="(card, cardIndex) in column.cards" :key="cardIndex">
                     <card 
                         :card="card" 
                         :columnIndex="index" 
                         :cardIndex="cardIndex" 
-
                         @move-card="moveCard" 
-                        
-                        @edit-card="editCard" 
-
+                        @edit-card="openEditModal" 
                         @remove-card="removeCard">                       
                     </card>
                 </div>
             </div>
+            
+            <modal v-if="isModalOpen">
+                <h3>{{ isEditing ? 'Редактирование задачи' : 'Новая задача' }}</h3>
+                <div class="modal-form">
+                    <input v-model="editData.title" placeholder="Заголовок">
+                    <textarea v-model="editData.description" placeholder="Описание"></textarea>
+                    <input type="date" v-model="editData.deadline">
+                    <div class="modal-buttons">
+                        <button @click="saveCard">ОК</button>
+                        <button @click="isModalOpen = false">Отмена</button>
+                    </div>
+                </div>
+            </modal>
         </div>
     `
 });
