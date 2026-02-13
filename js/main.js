@@ -17,18 +17,33 @@ Vue.component('date-picker', {
 
 Vue.component('card', {
     props: ['card', 'columnIndex', 'cardIndex'],
+    computed: {
+        isLocked() {
+            return this.columnIndex === 3;
+        }
+    },
     template: `
-        <div class="card" :class="{ completed: card.completed, overdue: card.overdue }">
+        <div class="card" :class="{ completed: card.completed, overdue: card.overdue, locked: isLocked }">
+             <template v-if="isLocked">
+                <h4 v-if="card.overdue" class="overdue-text">ПРОСРОЧЕНО</h4>
+                <h4 v-else class="completed-text">ВЫПОЛНЕНО</h4>
+            </template>
+
             <h3>{{ card.title }}</h3>
             <p>{{ card.description }}</p>
             <p><strong>Дэдлайн:</strong> {{ card.deadline }}</p>
             <p><strong>Создано:</strong> {{ card.createdAt }}</p>
             <p><strong>Обновлено:</strong> {{ card.updatedAt }}</p>
-            <date-picker v-model="card.deadline"></date-picker>
-            <button @click="$emit('edit-card', columnIndex, cardIndex)">Редактировать</button>
-            <button v-if="columnIndex < 3" @click="$emit('move-card', columnIndex, columnIndex + 1, cardIndex)">Переместить в следующую колонку</button>
-            <button v-if="columnIndex === 2" @click="$emit('move-card', columnIndex, columnIndex - 1, cardIndex)">Вернуть в предыдущую колонку</button>
+            
+            <template v-if="!isLocked">
+                <date-picker v-model="card.deadline"></date-picker>
+                <button @click="$emit('edit-card', columnIndex, cardIndex)">Редактировать</button>
+                <button v-if="columnIndex < 3" @click="$emit('move-card', columnIndex, columnIndex + 1, cardIndex)">Вперед</button>
+                <button v-if="columnIndex === 2" @click="$emit('move-card', columnIndex, columnIndex - 1, cardIndex)">Назад</button>
+            </template>
+            
             <button v-if="columnIndex === 0 || columnIndex === 3" @click="$emit('remove-card', columnIndex, cardIndex)">Удалить</button>
+            
             <p v-if="card.returnReason"><strong>Причина возврата:</strong> {{ card.returnReason }}</p>
         </div>
     `
@@ -192,7 +207,6 @@ Vue.component('board', {
         <div class="board">
             <div class="column" v-for="(column, index) in columns" :key="index">
                 <h2>{{ column.title }}</h2>
-
                 <button v-if="index === 0" @click="openCreateModal(index)">Добавить задачу</button>
                 
                 <div v-for="(card, cardIndex) in column.cards" :key="cardIndex">
