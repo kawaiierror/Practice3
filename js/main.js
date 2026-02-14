@@ -73,6 +73,15 @@ Vue.component('board', {
     mounted() {
         this.loadData();
     },
+    watch: {
+        columns: {
+            handler(newColumns) {
+                localStorage.setItem('kanbanData', JSON.stringify(newColumns));
+                console.log('сохранено');
+            },
+            deep: true
+        }
+    },
     methods: {
         addCard(columnIndex) {
             const title = prompt("Введите заголовок задачи:");
@@ -91,7 +100,7 @@ Vue.component('board', {
                     overdue: false
                 };
                 this.columns[columnIndex].cards.push(newCard);
-                this.saveData();
+                // this.saveData();
             }
         },
         editCard(columnIndex, cardIndex) {
@@ -104,13 +113,13 @@ Vue.component('board', {
                 card.title = title;
                 card.description = description;
                 card.updatedAt = timestamp;
-                this.saveData();
+                // this.saveData();
             }
         },
         removeCard(columnIndex, cardIndex) {
             if (confirm("Вы уверены, что хотите удалить эту карточку?")) {
                 this.columns[columnIndex].cards.splice(cardIndex, 1);
-                this.saveData();
+                // this.saveData();
             }
         },
         moveCard(sourceColumnIndex, targetColumnIndex, cardIndex) {
@@ -126,16 +135,16 @@ Vue.component('board', {
             this.columns[targetColumnIndex].cards.push(card);
             this.columns[sourceColumnIndex].cards.splice(cardIndex, 1);
             this.checkOverdue(card);
-            this.saveData();
+            // this.saveData();
         },
         checkOverdue(card) {
             const today = new Date().setHours(0,0,0,0);
             const deadline = new Date(card.deadline).setHours(0,0,0,0);
             card.overdue = deadline < today;
         },
-        saveData() {
-            localStorage.setItem('kanbanData', JSON.stringify(this.columns));
-        },
+        // saveData() {
+        //     localStorage.setItem('kanbanData', JSON.stringify(this.columns));
+        // },
         loadData() {
             const data = localStorage.getItem('kanbanData');
             if (data) {
@@ -198,7 +207,7 @@ Vue.component('board', {
                 this.checkOverdue(newCard);
             }
 
-            this.saveData();
+            // this.saveData();
             this.isModalOpen = false;
         }
     },
